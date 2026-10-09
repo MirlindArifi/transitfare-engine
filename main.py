@@ -3,19 +3,15 @@
 import sys
 from pathlib import Path
 
-# Ensure src is on Python path when running main.py directly
+# Ensure src directory is present on Python search path when executing directly
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
-from transit_fare import __version__  # noqa: E402
+from transit_fare.cli import run_cli  # noqa: E402
 
 
 def main() -> None:
-    """Run TransitFare Engine entry point."""
-    print("=" * 45)
-    print(f"TransitFare Engine v{__version__}")
-    print("Balkan Regional Transit Fare & Concession Engine")
-    print("=" * 45)
-    print("Ready for domain initialization.")
+    """Run CLI entry point and exit with return code."""
+    sys.exit(run_cli())
 
 
 if __name__ == "__main__":
