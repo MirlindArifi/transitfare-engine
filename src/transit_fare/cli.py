@@ -5,6 +5,7 @@ import sys
 from typing import List, Optional
 
 from transit_fare.calculator import FareCalculator
+from transit_fare.formatter import format_ticket
 from transit_fare.validator import validate_and_create_domain_objects
 
 
@@ -70,7 +71,7 @@ def run_cli(args: Optional[List[str]] = None) -> int:
             route=route, passenger=passenger, is_peak=parsed_args.peak
         )
 
-        print(f"Calculated Fare: €{ticket.final_fare:.2f}")
+        print(format_ticket(ticket))
         return 0
 
     except (ValueError, TypeError) as err:
