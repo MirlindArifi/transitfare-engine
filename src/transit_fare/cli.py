@@ -5,6 +5,7 @@ import sys
 from typing import List, Optional
 
 from transit_fare.calculator import FareCalculator
+from transit_fare.exceptions import TransitEngineError
 from transit_fare.formatter import format_ticket
 from transit_fare.validator import validate_and_create_domain_objects
 
@@ -74,6 +75,6 @@ def run_cli(args: Optional[List[str]] = None) -> int:
         print(format_ticket(ticket))
         return 0
 
-    except (ValueError, TypeError) as err:
+    except (TransitEngineError, TypeError) as err:
         print(f"Error: {err}", file=sys.stderr)
         return 1

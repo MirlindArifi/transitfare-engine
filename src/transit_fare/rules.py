@@ -3,17 +3,19 @@
 from dataclasses import dataclass, field
 from typing import Dict
 
+from transit_fare.exceptions import TariffRuleError
+
 
 @dataclass(frozen=True)
 class FarePolicy:
-    """Encapsulates tariff structure and concession rules for a network."""
+    """Encapsulates the tariff structure and concession rules for a transit network."""
 
     # Base fare by number of zone hops crossed
     hop_fares: Dict[int, float] = field(
         default_factory=lambda: {
             1: 2.00,  # e.g., Zone 1 -> Zone 2 (Lipjan)
             2: 3.50,  # e.g., Zone 2 -> Zone 4 (Prizren)
-            3: 5.00,  # e.g., Zone 1 -> Zone 4 (Prishtina -> Prizren)
+            3: 5.00,  # e.g., Zone 1 -> Zone 4 (Prishtina -> Prizren full corridor)
         }
     )
 
@@ -33,31 +35,28 @@ class FarePolicy:
         """Retrieve the base fare for a given number of zone hops.
 
         Raises:
-            ValueError: If no fare is defined for requested hops.
+            TariffRuleError: If no fare is defined for the requested number of hops.
         """
         if hops not in self.hop_fares:
             valid_hops = ", ".join(str(h) for h in sorted(self.hop_fares))
-            msg = (
+            raise TariffRuleError(
                 f"No tariff defined for {hops} zone hop(s). "
                 f"Supported hops: {valid_hops}."
             )
-            raise ValueError(msg)
         return self.hop_fares[hops]
 
     def get_discount_rate(self, category: str) -> float:
-        """Retrieve concession discount rate for a passenger category.
+        """Retrieve the concession discount rate for a passenger category.
 
         Raises:
-            ValueError: If category has no defined discount rate.
+            TariffRuleError: If the category has no defined discount rate.
         """
         normalized = category.strip().lower()
         if normalized not in self.concession_rates:
             valid_cats = ", ".join(sorted(self.concession_rates))
-            msg = (
-                f"Unknown concession category '{category}'. "
-                f"Supported: {valid_cats}."
+            raise TariffRuleError(
+                f"Unknown concession category '{category}'. Supported: {valid_cats}."
             )
-            raise ValueError(msg)
         return self.concession_rates[normalized]
 
 

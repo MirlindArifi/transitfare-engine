@@ -3,6 +3,11 @@
 from dataclasses import dataclass
 from typing import ClassVar, Dict, Set
 
+from transit_fare.exceptions import (
+    InvalidPassengerError,
+    InvalidRouteError,
+)
+
 
 class Route:
     """Represents a regional transit route between two numeric zones."""
@@ -23,24 +28,23 @@ class Route:
 
         Raises:
             TypeError: If zones are not integers.
-            ValueError: If zones are out of bounds or origin equals destination.
+            InvalidRouteError: If zones are out of bounds or origin equals destination.
         """
         if not isinstance(origin_zone, int) or not isinstance(destination_zone, int):
             raise TypeError("Zone identifiers must be integers.")
 
         if not (self.MIN_ZONE <= origin_zone <= self.MAX_ZONE):
-            raise ValueError(
-                f"Origin zone must be between " f"{self.MIN_ZONE} and {self.MAX_ZONE}."
+            raise InvalidRouteError(
+                f"Origin zone must be between {self.MIN_ZONE} and {self.MAX_ZONE}."
             )
 
         if not (self.MIN_ZONE <= destination_zone <= self.MAX_ZONE):
-            raise ValueError(
-                f"Destination zone must be between "
-                f"{self.MIN_ZONE} and {self.MAX_ZONE}."
+            raise InvalidRouteError(
+                f"Destination zone must be between {self.MIN_ZONE} and {self.MAX_ZONE}."
             )
 
         if origin_zone == destination_zone:
-            raise ValueError(
+            raise InvalidRouteError(
                 "Intra-zone travel is not supported. "
                 "Origin and destination must differ."
             )
@@ -79,30 +83,24 @@ class Route:
 class Passenger:
     """Represents a transit passenger and their concession status."""
 
-    VALID_CATEGORIES: ClassVar[Set[str]] = {
-        "regular",
-        "student",
-        "pensioner",
-    }
+    VALID_CATEGORIES: ClassVar[Set[str]] = {"regular", "student", "pensioner"}
 
     def __init__(self, category: str) -> None:
         """Initialize and validate a passenger.
 
         Raises:
             TypeError: If category is not a string.
-            ValueError: If category is not one of the allowed categories.
+            InvalidPassengerError: If category is not one of the allowed categories.
         """
         if not isinstance(category, str):
             raise TypeError("Passenger category must be a string.")
 
         normalized_category = category.strip().lower()
-
         if normalized_category not in self.VALID_CATEGORIES:
             allowed = ", ".join(sorted(self.VALID_CATEGORIES))
-            message = (
-                f"Invalid passenger category '{category}'. " f"Allowed: {allowed}."
+            raise InvalidPassengerError(
+                f"Invalid passenger category '{category}'. Allowed: {allowed}."
             )
-            raise ValueError(message)
 
         self.category: str = normalized_category
 
@@ -139,5 +137,4 @@ class Ticket:
             ("final_fare", self.final_fare),
         ]:
             if amount < 0:
-                message = f"{field_name} cannot be negative. Got {amount}."
-                raise ValueError(message)
+                raise ValueError(f"{field_name} cannot be negative. Got {amount}.")
